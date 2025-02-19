@@ -1,0 +1,112 @@
+﻿@page "/emissions/Edit"
+@using Microsoft.EntityFrameworkCore
+@using humanemission.Model
+@inject IDbContextFactory<humanemission.Data.humanemissionContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Emissions</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Emissions" OnValidSubmit="UpdateEmission" FormName="edit" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <input type="hidden" name="Emissions.Id" value="@Emissions.Id" />
+
+            <div class="mb-3">
+                <label for="typeofemission" class="form-label">TypeOfEmission:</label> 
+                <InputText id="typeofemission" @bind-Value="Emissions.TypeOfEmission" class="form-control" /> 
+                <ValidationMessage For="() => Emissions.TypeOfEmission" class="text-danger" /> 
+            </div>        
+            
+            <div class="mb-3">
+                <label for="cause" class="form-label">Cause:</label> 
+                <InputText id="cause" @bind-Value="Emissions.Cause" class="form-control" /> 
+                <ValidationMessage For="() => Emissions.Cause" class="text-danger" /> 
+            </div>        
+            
+            <div class="mb-3">
+                <label for="effect" class="form-label">Effect:</label> 
+                <InputText id="effect" @bind-Value="Emissions.Effect" class="form-control" /> 
+                <ValidationMessage For="() => Emissions.Effect" class="text-danger" /> 
+            </div>        
+            
+            <div class="mb-3">
+                <label for="controlmeasure" class="form-label">ControlMeasure:</label> 
+                <InputText id="controlmeasure" @bind-Value="Emissions.ControlMeasure" class="form-control" /> 
+                <ValidationMessage For="() => Emissions.ControlMeasure" class="text-danger" /> 
+            </div>        
+            
+            <div class="mb-3">
+                <label for="emissionimage" class="form-label">EmissionImage:</label> 
+                <InputFile id="emissionimage" @bind-Value="Emissions.EmissionImage"
+                accept=".jpg,.jpeg,.png" OnChange="HandleImageFile" />
+                <span class="custom-file-label">Choose File</span>
+            </div>
+
+            @if (imagePreview != null)
+            {
+                <div style="margin: 1rem; border: solid black 2px; width: 254px; height: 254px;">
+                    <img src="@imagePreview" alt="Image Preview" style="width: 250px; height: 250px;" />
+                </div>
+            }
+        </EditForm>
+
+    </div>
+</div>
+    <button type="submit" class="btn btn-primary">Save</button>
+<div>
+    <a href="/emissions">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Emissions Emissions { get; set; } = new Emissions();
+    private string ?imagePreview;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Emissions ??= await context.Emissions.FirstOrDefaultAsync(m => m.Id == m.Id);
+    }
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateEmission()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Emissions).State = EntityState.Modified;
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/emissions");
+    }
+
+    private async Task HandleImageFile(InputFileChangeEventArgs e)
+    {
+        byte[] imageBytes;
+
+        if (e.File != null)
+        {
+            if (e.File.Size < 150000) // Check if the image is under the size limit (150KB)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await e.File.OpenReadStream().CopyToAsync(stream);
+                    imageBytes = stream.ToArray();
+                    imagePreview = $"data:{e.File.ContentType};base64,{Convert.ToBase64String(imageBytes)}";
+
+                    // Store the image byte array in the Emissions model
+                    Emissions.EmissionImage = imageBytes;
+                }
+            }
+            else
+            {
+                // Optionally, add a message or warning for image size
+                // For example, you can show an error message here if the image exceeds the size limit
+                Console.WriteLine("File size is too large.");
+            }
+        }
+    }
+}

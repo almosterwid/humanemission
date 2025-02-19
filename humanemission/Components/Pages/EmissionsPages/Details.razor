@@ -1,0 +1,67 @@
+﻿@page "/emissions/details"
+@using Microsoft.EntityFrameworkCore
+@using humanemission.Model
+@inject IDbContextFactory<humanemission.Data.humanemissionContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Emissions</h2>
+    <hr />
+    @if (emissions is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">TypeOfEmission</dt>
+            <dd class="col-sm-10">@emissions.TypeOfEmission</dd>
+            <dt class="col-sm-2">Cause</dt>
+            <dd class="col-sm-10">@emissions.Cause</dd>
+            <dt class="col-sm-2">Effect</dt>
+            <dd class="col-sm-10">@emissions.Effect</dd>
+            <dt class="col-sm-2">ControlMeasure</dt>
+            <dd class="col-sm-10">@emissions.ControlMeasure</dd>
+            <dt class="col-sm-2">EmissionImage</dt>
+            @* <dd class="col-sm-10">@emissions.EmissionImage</dd> *@
+            <dd class="col-sm-10">
+                @if (imagePreview != null)
+                {
+                    <div style="margin: 1rem; border: solid black 2px; width: 254px; height: 254px;">
+                        <img src="@imagePreview" alt="Image Preview" style="width: 250px; height: 250px;" />
+                    </div>
+                }
+            </dd>
+        </dl>
+        <div>
+            <a href="@($"/emissions/edit?id={emissions.Id}")">Edit</a> |
+            <a href="@($"/emissions")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Emissions? emissions;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+    private string imagePreview;
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        emissions = await context.Emissions.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (emissions is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+
+        if (emissions.EmissionImage != null)
+        {
+            imagePreview = $"data:image/png;base64,{Convert.ToBase64String(emissions.EmissionImage)}";
+        }
+    }
+}

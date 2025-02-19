@@ -1,0 +1,49 @@
+﻿@page "/emissions"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.FluentUI.AspNetCore.Components
+@using humanemission.Model
+@using humanemission.Data
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+@inject IDbContextFactory<humanemission.Data.humanemissionContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="emissions/create">Create New</a>
+</p>
+
+<FluentDataGrid id="Emissions" Items="_emissions" TGridItem="Emissions">
+    <PropertyColumn Title="TypeOfEmission" Property="contacttickethistory => contacttickethistory.TypeOfEmission" />
+    <PropertyColumn Title="Cause" Property="contacttickethistory => contacttickethistory.Cause" />
+    <PropertyColumn Title="Effect" Property="contacttickethistory => contacttickethistory.Effect" />
+    <PropertyColumn Title="ControlMeasure" Property="contacttickethistory => contacttickethistory.ControlMeasure" />
+    <PropertyColumn Title="EmissionImage" Property="contacttickethistory => contacttickethistory.EmissionImage" />
+    <TemplateColumn Context="emissions">
+        <a href="@($"emissions/edit?id={emissions.Id}")">Edit</a> |
+        <a href="@($"emissions/details?id={emissions.Id}")">Details</a> |
+        <a href="@($"emissions/delete?id={emissions.Id}")">Delete</a>
+    </TemplateColumn>
+</FluentDataGrid>
+
+@code {
+    private humanemissionContext context = default!;
+    private IQueryable<Emissions> _emissions = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        context = DbFactory.CreateDbContext();
+        var humanemissionlist = await context.Emissions.ToListAsync();
+        _emissions = humanemissionlist.AsQueryable();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (context != null)
+        {
+            await context.DisposeAsync();
+        }
+    }
+}
