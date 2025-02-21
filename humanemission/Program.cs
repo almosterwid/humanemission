@@ -3,6 +3,9 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using humanemission.Data;
+using Blazorise;
+using Blazorise.AntDesign;
+using Microsoft.AspNetCore.Components;
 
 namespace humanemission
 {
@@ -22,6 +25,13 @@ namespace humanemission
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
             builder.Services.AddFluentUIComponents();
+            AddBlazorise(builder.Services);
+
+            //builder.Services.AddScoped<NavigationManager>();
+
+
+
+            //builder.Services.AddSingleton<IIdGenerator, DefaultIdGenerator>();
 
             var app = builder.Build();
 
@@ -43,6 +53,16 @@ namespace humanemission
                 .AddInteractiveServerRenderMode();
 
             app.Run();
+
+            void AddBlazorise(IServiceCollection services)
+            {
+                services
+                    .AddBlazorise();
+                services
+                    .AddAntDesignProviders();
+                    //.AddFontAwesomeIcons();
+            }
+
         }
     }
 }

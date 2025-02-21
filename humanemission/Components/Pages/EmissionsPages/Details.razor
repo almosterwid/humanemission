@@ -4,53 +4,68 @@
 @inject IDbContextFactory<humanemission.Data.humanemissionContext> DbFactory
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
+
 <PageTitle>Details</PageTitle>
 
-<h1>Details</h1>
+<FluentCard class="details-card shadow-lg p-6 rounded-xl bg-gradient-to-r from-blue-100 to-blue-50">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="24">
+        <FluentTypography Variant="h1" class="text-blue-800 font-extrabold text-3xl">Emission Details</FluentTypography>
+        <FluentDivider class="border-blue-400"></FluentDivider>
 
-<div>
-    <h2>Emissions</h2>
-    <hr />
-    @if (emissions is null)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else {
-        <dl class="row">
-            <dt class="col-sm-2">TypeOfEmission</dt>
-            <dd class="col-sm-10">@emissions.TypeOfEmission</dd>
-            <dt class="col-sm-2">Cause</dt>
-            <dd class="col-sm-10">@emissions.Cause</dd>
-            <dt class="col-sm-2">Effect</dt>
-            <dd class="col-sm-10">@emissions.Effect</dd>
-            <dt class="col-sm-2">ControlMeasure</dt>
-            <dd class="col-sm-10">@emissions.ControlMeasure</dd>
-            <dt class="col-sm-2">EmissionImage</dt>
-            @* <dd class="col-sm-10">@emissions.EmissionImage</dd> *@
-            <dd class="col-sm-10">
-                @if (imagePreview != null)
-                {
-                    <div style="margin: 1rem; border: solid black 2px; width: 254px; height: 254px;">
-                        <img src="@imagePreview" alt="Image Preview" style="width: 250px; height: 250px;" />
-                    </div>
-                }
-            </dd>
-        </dl>
-        <div>
-            <a href="@($"/emissions/edit?id={emissions.Id}")">Edit</a> |
-            <a href="@($"/emissions")">Back to List</a>
-        </div>
-    }
-</div>
+        @if (emissions is null)
+        {
+            <FluentTypography class="text-gray-600 text-lg italic">Loading...</FluentTypography>
+        }
+        else
+        {
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16" class="bg-white p-4 rounded-lg shadow-md">
+                <FluentStack class="flex justify-between items-center">
+                    <FluentTypography Variant="h5" class="font-semibold text-lg text-gray-700">Type of Emission:</FluentTypography>
+                    <FluentTypography class="text-blue-700 text-lg font-medium">@emissions.TypeOfEmission</FluentTypography>
+                </FluentStack>
+                <FluentStack class="flex justify-between items-center">
+                    <FluentTypography Variant="h5" class="font-semibold text-lg text-gray-700">Cause:</FluentTypography>
+                    <FluentTypography class="text-blue-700 text-lg font-medium">@emissions.Cause</FluentTypography>
+                </FluentStack>
+                <FluentStack class="flex justify-between items-center">
+                    <FluentTypography Variant="h5" class="font-semibold text-lg text-gray-700">Effect:</FluentTypography>
+                    <FluentTypography class="text-blue-700 text-lg font-medium">@emissions.Effect</FluentTypography>
+                </FluentStack>
+                <FluentStack class="flex justify-between items-center">
+                    <FluentTypography Variant="h5" class="font-semibold text-lg text-gray-700">Control Measure:</FluentTypography>
+                    <FluentTypography class="text-blue-700 text-lg font-medium">@emissions.ControlMeasure</FluentTypography>
+                </FluentStack>
+                <FluentStack class="flex flex-col items-center">
+                    <FluentTypography Variant="h5" class="font-semibold text-lg text-gray-700">Emission Image:</FluentTypography>
+                    @if (imagePreview != null)
+                    {
+                        <FluentCard class="p-2 shadow-md rounded-md border border-gray-300 bg-white">
+                            <img src="@imagePreview" alt="Image Preview" class="w-64 h-64 object-cover rounded-md" />
+                        </FluentCard>
+                    }
+                </FluentStack>
+            </FluentStack>
+        }
+
+        <FluentDivider class="border-blue-400"></FluentDivider>
+        <FluentStack HorizontalGap="16" class="flex justify-center mt-4">
+            <FluentButton Appearance="Appearance.Accent" Href="@($"/emissions/edit?id={emissions?.Id}")" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700">Edit</FluentButton>
+            <FluentButton Appearance="Appearance.Neutral" Href="/emissions" class="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500">Back to List</FluentButton>
+        </FluentStack>
+    </FluentStack>
+</FluentCard>
 
 @code {
+    [SupplyParameterFromQuery] private int Id { get; set; }
+    
     private Emissions? emissions;
-
-    [SupplyParameterFromQuery]
-    private int Id { get; set; }
+    
+    
     private string imagePreview;
+
     protected override async Task OnInitializedAsync()
     {
+
         using var context = DbFactory.CreateDbContext();
         emissions = await context.Emissions.FirstOrDefaultAsync(m => m.Id == Id);
 
@@ -59,7 +74,7 @@
             NavigationManager.NavigateTo("notfound");
         }
 
-        if (emissions.EmissionImage != null)
+        if (emissions?.EmissionImage != null)
         {
             imagePreview = $"data:image/png;base64,{Convert.ToBase64String(emissions.EmissionImage)}";
         }

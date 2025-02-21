@@ -5,38 +5,79 @@
 @using humanemission.Data
 @rendermode InteractiveServer
 @implements IAsyncDisposable
+@inject NavigationManager Navmanager
+
 @inject IDbContextFactory<humanemission.Data.humanemissionContext> DbFactory
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Emissions</PageTitle>
 
-<h1>Index</h1>
+<FluentTypography Variant="h1">Emissions</FluentTypography>
 
-<p>
-    <a href="emissions/create">Create New</a>
-</p>
+<FluentButton Appearance="Appearance.Accent" Href="emissions/create">Create New</FluentButton>
 
-<FluentDataGrid id="Emissions" Items="_emissions" TGridItem="Emissions">
-    <PropertyColumn Title="TypeOfEmission" Property="contacttickethistory => contacttickethistory.TypeOfEmission" />
-    <PropertyColumn Title="Cause" Property="contacttickethistory => contacttickethistory.Cause" />
-    <PropertyColumn Title="Effect" Property="contacttickethistory => contacttickethistory.Effect" />
-    <PropertyColumn Title="ControlMeasure" Property="contacttickethistory => contacttickethistory.ControlMeasure" />
-    <PropertyColumn Title="EmissionImage" Property="contacttickethistory => contacttickethistory.EmissionImage" />
-    <TemplateColumn Context="emissions">
-        <a href="@($"emissions/edit?id={emissions.Id}")">Edit</a> |
-        <a href="@($"emissions/details?id={emissions.Id}")">Details</a> |
-        <a href="@($"emissions/delete?id={emissions.Id}")">Delete</a>
-    </TemplateColumn>
-</FluentDataGrid>
+<FluentStack Orientation="Orientation.Horizontal" HorizontalGap="16" VerticalGap="16" Style="margin-top: 20px;">
+    @if (_emissions.Any())
+    {
+        @foreach (var emissions in _emissions)
+        {
+            <FluentCard Style="width: 300px; padding: 16px; text-align: center;">
+                <!-- Emission Image -->
+                @if (emissions.EmissionImage != null)
+                {
+                    <img src="data:image/png;base64,@Convert.ToBase64String(emissions.EmissionImage)"
+                         alt="Emission Image"
+                         style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;" />
+                }
+                else
+                {
+                    <FluentTypography Variant="body1">No Image</FluentTypography>
+                }
+
+                <!-- Emission Details -->
+                <FluentTypography Variant="h5">@emissions.TypeOfEmission</FluentTypography>
+                <FluentDivider></FluentDivider>
+                <FluentTypography Variant="body1"><strong>Cause:</strong> @emissions.Cause</FluentTypography>
+                <FluentTypography Variant="body1"><strong>Effect:</strong> @emissions.Effect</FluentTypography>
+                <FluentTypography Variant="body1"><strong>Control Measure:</strong> @emissions.ControlMeasure</FluentTypography>
+
+                <!-- Action Buttons -->
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" Style="margin-top: 12px;">
+                     @* <FluentButton Appearance="Appearance." @onclick="() => Navigation.NavigateTo($"emissions/details?id={emissions.Id}")">Details</FluentButton>
+<FluentButton Appearance="Neutral" @onclick="() => Navigation.NavigateTo($"emissions/edit?id={emissions.Id}")">Edit</FluentButton>
+<FluentButton Appearance="Stealth" @onclick="() => Navigation.NavigateTo($"emissions/delete?id={emissions.Id}")">Delete</FluentButton> *@
+                    <FluentButton Title="Edit" @onclick="() => EditAsync(emissions.Id)"><FluentIcon Value="@(new Icons.Regular.Size20.Edit())" /></FluentButton>
+                    <FluentButton Title="Detail" @onclick="() => DetailClicked(emissions.Id)"><FluentIcon Value="@(new Icons.Regular.Size20.AppsListDetail())" /></FluentButton>
+                    @* <FluentButton Appearance="Appearance.Accent" Href="@($"emissions/details?id={emissions.Id}")">Details</FluentButton>
+                    <FluentButton Appearance="Appearance.Neutral" Href="@($"emissions/edit?id={emissions.Id}")">Edit</FluentButton>
+                    <FluentButton Appearance="Appearance.Stealth" Href="@($"emissions/delete?id={emissions.Id}")">Delete</FluentButton> *@
+                </FluentStack>
+            </FluentCard>
+        }
+    }
+    else
+    {
+        <FluentTypography Variant="body1">No emissions found.</FluentTypography>
+    }
+</FluentStack>
 
 @code {
     private humanemissionContext context = default!;
-    private IQueryable<Emissions> _emissions = default!;
+    private List<Emissions> _emissions = new();
 
     protected override async Task OnInitializedAsync()
     {
         context = DbFactory.CreateDbContext();
-        var humanemissionlist = await context.Emissions.ToListAsync();
-        _emissions = humanemissionlist.AsQueryable();
+        _emissions = await context.Emissions.ToListAsync();
+    }
+
+    private void DetailClicked(int entityID)
+    {
+        Navmanager.NavigateTo("/emissions/details?id=" + entityID);
+    }
+
+    private void EditAsync(int entityID)
+    {
+        Navmanager.NavigateTo("/emissions/edit?id=" + entityID);
     }
 
     public async ValueTask DisposeAsync()
