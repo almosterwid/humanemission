@@ -26,7 +26,7 @@ namespace humanemission
                 .AddInteractiveServerComponents();
             builder.Services.AddFluentUIComponents();
             AddBlazorise(builder.Services);
-
+            builder.Services.AddHttpClient();
             //builder.Services.AddScoped<NavigationManager>();
 
 

@@ -1,7 +1,64 @@
 ﻿@page "/"
+@using Newtonsoft.Json
+@inject HttpClient Http
 
-<PageTitle>Home</PageTitle>
+<!-- Full-width container for the landscape image -->
+<div style="width: 100%; max-width: 100%; overflow: hidden;">
+    <FluentStack VerticalAlignment="VerticalAlignment.Top" HorizontalAlignment="HorizontalAlignment.Stretch" Style="width: 100%;">
+        @if (PhotoUrl == null)
+        {
+            <FluentProgressRing Style="width: 100%; text-align: center;" />
+        }
+        else
+        {
+            <FluentCard Style="width: 100%; padding: 0;">
+                <img src="@PhotoUrl"
+                     alt="@PhotoAlt"
+                     style="width: 100%; height: auto; object-fit: cover; border-radius: 0;" />
+            </FluentCard>
+            <FluentStack VerticalAlignment="VerticalAlignment.Top" HorizontalAlignment="HorizontalAlignment.Center" Style="padding-top: 16px; width: 100%; max-width: 800px; margin: 0 auto;">
+                <FluentLabel Typo="Typography.Header" Style="text-align: center;">
+                    @PhotoTitle
+                </FluentLabel>
+                <FluentLabel Typo="Typography.Body" Style="color: var(--neutral-secondary); text-align: center;">
+                    @PhotoDescription
+                </FluentLabel>
+            </FluentStack>
+        }
+    </FluentStack>
+</div>
 
-<h1>Hello, world!</h1>
+@code {
+    private string PhotoUrl { get; set; }
+    private string PhotoAlt { get; set; } = "Instructor with Technology";
+    private string PhotoTitle { get; set; } = "Instructor Info";
+    private string PhotoDescription { get; set; } = "Fetched from Unsplash";
 
-Welcome to your new Fluent Blazor app.
+    protected override async Task OnInitializedAsync()
+    {
+        string apiKey = "JUfL867ncDu-fd2GIEEG4a9WFMbNBe0WrG1blBeIUjw"; // Your Unsplash API key
+
+        Http.DefaultRequestHeaders.Add("Authorization", $"Client-ID {apiKey}");
+
+        try
+        {
+            // Fetch a landscape photo related to technology/instructors
+            string url = "https://api.unsplash.com/photos/green-grass-field-near-lake-and-mountain-during-daytime-usGRO_5zfUg";
+            var response = await Http.GetStringAsync(url);
+            dynamic photoData = JsonConvert.DeserializeObject(response);
+
+            PhotoUrl = photoData.urls.full; // Use full resolution for a banner-like image
+            PhotoAlt = photoData.alt_description?.ToString() ?? "Instructor with Technology";
+            PhotoTitle = photoData.description?.ToString() ?? "Instructor Info";
+            PhotoDescription = photoData.user.name != null
+                ? $"Photo by {photoData.user.name} on Unsplash"
+                : "Fetched from Unsplash";
+        }
+        catch (Exception ex)
+        {
+            PhotoTitle = "Error Loading Photo";
+            PhotoDescription = $"Failed to fetch: {ex.Message}";
+            Console.WriteLine(ex.Message);
+        }
+    }
+}
